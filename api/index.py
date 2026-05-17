@@ -1,7 +1,7 @@
-import os
-import sys
+from fastapi import FastAPI
 
-# Add the 'server' directory to the Python path so absolute imports work
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'server'))
+app = FastAPI()
 
-from main import app
+@app.get("/")
+def home():
+    return {"status": "ok"}
