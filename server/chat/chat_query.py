@@ -18,13 +18,21 @@ PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 
-#  1. initialize pinecone client
-pc=Pinecone(api_key=PINECONE_API_KEY)
-index=pc.Index(PINECONE_INDEX_NAME)
-#  2. define embedding model
-embed_model=GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-#  3. define llm model
-llm=ChatGroq(temperature=0.3, model_name="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY)
+pc = None
+index = None
+embed_model = None
+llm = None
+
+def init_models():
+    global pc, index, embed_model, llm, rag_chain, quiz_chain
+    if pc is None:
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        index = pc.Index(PINECONE_INDEX_NAME)
+        embed_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+        llm = ChatGroq(temperature=0.3, model_name="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY)
+        rag_chain = rag_prompt | llm
+        quiz_chain = quiz_prompt | llm
+
 #  4. define chat prompt
 rag_prompt=PromptTemplate.from_template(
     """
@@ -61,12 +69,12 @@ Context:
 {context}
 """
 )
-# 5. define rag chain
-rag_chain=rag_prompt | llm
-quiz_chain=quiz_prompt | llm
+rag_chain = None
+quiz_chain = None
 
 #  6. define the chat function
 async def answer_query(query:str,user_role:str,user_grade:int)->dict:
+    init_models()
     # 1. embedding generation
     embedding=await asyncio.to_thread(embed_model.embed_query,query)
     #  2. retrieve relevant embedding from vector db
@@ -115,6 +123,7 @@ async def answer_query(query:str,user_role:str,user_grade:int)->dict:
 
 
 async def quiz_generation(topic:str,user_role:str,user_grade:int,num_questions:int=3,)->dict:
+    init_models()
     # 1. embedding generation
     embedding=await asyncio.to_thread(embed_model.embed_query,topic)
     #  2. retrieve relevant embedding from vector db

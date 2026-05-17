@@ -164,22 +164,24 @@ def signup_page():
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
 
+            school = st.text_input("School")
+
             if role == "Student":
                 grade = st.number_input("Grade", 1, 12)
-                school = st.text_input("School")
 
             submitted = st.form_submit_button("Create Account")
 
             if submitted:
                 endpoint = "/signup/student" if role == "Student" else "/signup/teacher"
                 payload = {
-                    "fullName": full_name,
+                    "fullname": full_name,
                     "email": email,
-                    "userName": username,
+                    "username": username,
                     "password": password,
+                    "school": school,
                 }
                 if role == "Student":
-                    payload.update({"grade": grade, "school": school})
+                    payload.update({"grade": grade})
 
                 r = requests.post(
                     f"{BACKEND_URL}{endpoint}",
@@ -356,7 +358,7 @@ def student_dashboard():
             for attempt in history:
                 score = attempt["score"]
                 total = attempt["total"]
-                percent = int((score / total) * 100)
+                percent = int((score / total) * 100) if total > 0 else 0
 
                 with st.expander(
                     f"{attempt['topic']} — {score}/{total} ({percent}%)"

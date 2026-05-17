@@ -80,9 +80,17 @@ async  def load_vectorstore(uploaded_files,role:str,doc_id:str,grade:int):
             chunk_collection.insert_many(chunk_docs)
         # 5.2 create embeddings
         texts=[chunk.page_content for chunk in chunks]
-        embeddings= await asyncio.to_thread(embed_model.embed_documents,texts)
+        embeddings = []
+        batch_size = 10
+        for j in range(0, len(texts), batch_size):
+            batch_texts = texts[j:j+batch_size]
+            batch_emb = await asyncio.to_thread(embed_model.embed_documents, batch_texts)
+            embeddings.extend(batch_emb)
+            if j + batch_size < len(texts):
+                await asyncio.sleep(6)  # wait longer to strictly avoid rate limits
+        
         # upsert pinecone
-        ids=[f"{doc_id}{-i}" for i in range(len(embeddings))]
+        ids=[f"{doc_id}-{i}" for i in range(len(embeddings))]
 
         metadatas=[
             {
