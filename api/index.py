@@ -1,12 +1,9 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+import sys
+import os
 
-app = FastAPI()
+# Add server directory to sys.path so its modules can be imported
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'server')))
 
-@app.get("/")
-def root():
-    return {"message": "API working"}
+from main import app
 
-@app.get("/favicon.png")
-def favicon():
-    return JSONResponse(content={}, status_code=204)
+app.root_path = "/api"
