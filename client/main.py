@@ -11,7 +11,10 @@ load_dotenv()
 
 # CONFIG
 
-BACKEND_URL = os.getenv("BACKEND_URL")
+try:
+    BACKEND_URL = st.secrets["BACKEND_URL"]
+except (KeyError, FileNotFoundError, AttributeError):
+    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 BASE_DIR = os.path.dirname(__file__)
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
